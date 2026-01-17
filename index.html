@@ -41,9 +41,9 @@
           <h5 class="mb-3">Toppings</h5>
           <div class="d-flex justify-content-center align-items-center">
             <button id="btn-pepperoni" class="icon-btn" title="Add Pepperoni">🔴</button>
-            <button id="btn-mushrooms" class="icon-btn" title="Add Mushrooms"><img src="mushroom_clipart.png"></button>
-            <button id="btn-red-peppers" class="icon-btn" title="Add Red Peppers"><img src="red_pepper_clipart.png"></button>
-            <button id="btn-broccoli" class="icon-btn" title="Add Broccoli"><img src="broccoli_clipart.png"></button>
+            <button id="btn-mushrooms" class="icon-btn" title="Add Mushrooms"><img src="mushroom_clipart.png" alt="Mushroom icon"></button>
+            <button id="btn-red-peppers" class="icon-btn" title="Add Red Peppers"><img src="red_pepper_clipart.png" alt="Red pepper icon"></button>
+            <button id="btn-broccoli" class="icon-btn" title="Add Broccoli"><img src="broccoli_clipart.png" alt="Broccoli icon"></button>
           </div>
         </div>
         <div class="col-md-3">
@@ -90,20 +90,24 @@
   const rx = 280;
   const ry = 130;
 
-  let pizzaStats = {
-    sauce: 0,
-    cheese: 0,
-    pepperoni: 0,
-    mushrooms: 0,
-    flakes: 0,
-    herbs: 0,
-    redPeppers: 0,
-    broccoli: 0
+  // Centralized configuration for topping amounts
+  const toppingAmounts = {
+    cheese: 200,
+    pepperoni: 10,
+    mushrooms: 15,
+    redPeppers: 15,
+    broccoli: 15,
+    flakes: 10,
+    herbs: 10
   };
 
   // ===== FUNCTION DEFINITIONS =====
 
-  function drawCheckerboard() {
+  function getInitialPizzaStats() {
+    return { sauce: 0, cheese: 0, pepperoni: 0, mushrooms: 0, flakes: 0, herbs: 0, redPeppers: 0, broccoli: 0 };
+  }
+
+  function drawBackground() {
     const squareSize = width / 20;
     const cols = width / squareSize;
     const rows = height / squareSize;
@@ -160,163 +164,117 @@
 
   function addCheese(numLines) {
     const cheeseColors = ["#FFD700", "#FFA500", "#FFE4B5", "#FFDAB9", "#FFFACD"];
-    
-    for (let i = 0; i < numLines; i++) {
+    const data = d3.range(numLines).map(() => {
       const angle1 = Math.random() * Math.PI * 2;
       const dist1 = Math.sqrt(Math.random()) * rx;
-      
       const x1 = cx + dist1 * Math.cos(angle1);
       const y1 = cy + (dist1 * ry / rx) * Math.sin(angle1);
-      
       const lineAngle = Math.random() * Math.PI * 2;
       const lineLength = Math.random() * 20 + 5;
-      
-      const x2 = x1 + lineLength * Math.cos(lineAngle);
-      const y2 = y1 + lineLength * Math.sin(lineAngle);
-      
-      svg.append("line")
-        .attr("x1", x1) 
-        .attr("y1", y1)
-        .attr("x2", x2)
-        .attr("y2", y2)
-        .attr("stroke", cheeseColors[Math.floor(Math.random() * cheeseColors.length)])
-        .attr("stroke-width", Math.random() * 2 + 1)
-        .attr("opacity", Math.random() * 0.6 + 0.3);
-    }
+      return { x1, y1, x2: x1 + lineLength * Math.cos(lineAngle), y2: y1 + lineLength * Math.sin(lineAngle) };
+    });
+
+    svg.selectAll(null) // Use a non-matching selector to ensure .enter() is always populated
+      .data(data)
+      .enter()
+      .append("line")
+      .attr("class", "cheese-strand")
+      .attr("x1", d => d.x1)
+      .attr("y1", d => d.y1)
+      .attr("x2", d => d.x2)
+      .attr("y2", d => d.y2)
+      .attr("stroke", () => cheeseColors[Math.floor(Math.random() * cheeseColors.length)])
+      .attr("stroke-width", () => Math.random() * 2 + 1)
+      .attr("opacity", () => Math.random() * 0.6 + 0.3);
+
     pizzaStats.cheese += numLines;
   }
 
   function drawPepperoni(count) {
     const pepperoniColors = ["#E63946", "#C1121F", "#D62828", "#D32F2F"];
-    
-    for (let i = 0; i < count; i++) {
+    const data = d3.range(count).map(() => {
       const angle = Math.random() * Math.PI * 2;
       const dist = Math.sqrt(Math.random()) * (rx - 25);
-      
-      const x = cx + dist * Math.cos(angle);
-      const y = cy + (dist * ry / rx) * Math.sin(angle);
-      
-      svg.append("ellipse")
-        .attr("cx", x)
-        .attr("cy", y)
-        .attr("rx", 20)
-        .attr("ry", 13)
-        .attr("fill", pepperoniColors[Math.floor(Math.random() * pepperoniColors.length)]);
-    }
+      return {
+        x: cx + dist * Math.cos(angle),
+        y: cy + (dist * ry / rx) * Math.sin(angle),
+        color: pepperoniColors[Math.floor(Math.random() * pepperoniColors.length)]
+      };
+    });
+
+    svg.selectAll(null) // Use a non-matching selector to ensure .enter() is always populated
+      .data(data)
+      .enter()
+      .append("ellipse")
+      .attr("class", "pepperoni")
+      .attr("cx", d => d.x)
+      .attr("cy", d => d.y)
+      .attr("rx", 20)
+      .attr("ry", 13)
+      .attr("fill", d => d.color);
+
     pizzaStats.pepperoni += count;
   }
 
-  function drawRedPepperFlakes(count) {
-    for (let i = 0; i < count; i++) {
+  function drawPolygonTopping(count, toppingName, points, color, opacity) {
+    const data = d3.range(count).map(() => {
       const angle = Math.random() * Math.PI * 2;
       const dist = Math.sqrt(Math.random()) * (rx - 20);
-      
-      const x = cx + dist * Math.cos(angle);
-      const y = cy + (dist * ry / rx) * Math.sin(angle);
-      
-      const size = Math.random() * 4 + 2;
-      const rotation = Math.random() * 360;
-      
-      // Define points relative to center (0,0)
-      const points = `0,${-size} ${size},${size/2} ${-size},${size/2}`;
+      return {
+        x: cx + dist * Math.cos(angle),
+        y: cy + (dist * ry / rx) * Math.sin(angle),
+        rotation: Math.random() * 360
+      };
+    });
 
-      svg.append("polygon")
-        .attr("points", points)
-        .attr("fill", "#FF4500")
-        .attr("transform", `translate(${x}, ${y}) rotate(${rotation})`)
-        .attr("opacity", 0.8);
-    }
-    pizzaStats.flakes += count;
+    svg.selectAll(null) // Use a non-matching selector to ensure .enter() is always populated
+      .data(data)
+      .enter()
+      .append("polygon")
+      .attr("class", `topping-${toppingName}`)
+      .attr("points", points)
+      .attr("fill", color)
+      .attr("transform", d => `translate(${d.x}, ${d.y}) rotate(${d.rotation})`)
+      .attr("opacity", opacity);
+
+    pizzaStats[toppingName] += count;
   }
 
-  function drawHerbs(count) {
-    for (let i = 0; i < count; i++) {
+  function drawImageTopping(count, toppingName, imageUrl, options = {}) {
+    const {
+        baseSize = 30,
+        sizeVariance = 20,
+        sizeMultiplier = 1,
+        ellipseMargin = 40
+    } = options;
+
+    const data = d3.range(count).map(() => {
       const angle = Math.random() * Math.PI * 2;
-      const dist = Math.sqrt(Math.random()) * (rx - 20);
-      
-      const x = cx + dist * Math.cos(angle);
-      const y = cy + (dist * ry / rx) * Math.sin(angle);
-      
-      const size = Math.random() * 4 + 2;
-      const rotation = Math.random() * 360;
-      
-      // Diamond shape (4 points) centered at (0,0)
-      const points = `0,${-size} ${size/1.5},0 0,${size} ${-size/1.5},0`;
+      const dist = Math.sqrt(Math.random()) * (rx - ellipseMargin);
+      return {
+        x: cx + dist * Math.cos(angle),
+        y: cy + (dist * ry / rx) * Math.sin(angle),
+        size: Math.random() * sizeVariance + baseSize,
+        rotation: Math.random() * 360
+      };
+    });
 
-      svg.append("polygon")
-        .attr("points", points)
-        .attr("fill", "#3D7D00")
-        .attr("transform", `translate(${x}, ${y}) rotate(${rotation})`)
-        .attr("opacity", 0.7);
-    }
-    pizzaStats.herbs += count;
+    svg.selectAll(null) // Use a non-matching selector to ensure .enter() is always populated
+      .data(data)
+      .enter()
+      .append("image")
+      .attr("class", `topping-${toppingName}`)
+      .attr("href", imageUrl)
+      .attr("x", d => -d.size / 2)
+      .attr("y", d => -d.size / 2)
+      .attr("width", d => d.size * sizeMultiplier)
+      .attr("height", d => d.size * sizeMultiplier)
+      .attr("transform", d => `translate(${d.x}, ${d.y}) scale(1, ${ry / rx}) rotate(${d.rotation})`);
+
+    pizzaStats[toppingName] += count;
   }
 
-  function drawMushrooms(count) {
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = Math.sqrt(Math.random()) * (rx - 40);
-      
-      const x = cx + dist * Math.cos(angle);
-      const y = cy + (dist * ry / rx) * Math.sin(angle);
-      
-      const size = Math.random() * 20 + 30;
-      const rotation = Math.random() * 360;
-
-      svg.append("image")
-        .attr("href", "mushroom_clipart.png")
-        .attr("x", -size / 2)
-        .attr("y", -size / 2)
-        .attr("width", size)
-        .attr("height", size)
-        .attr("transform", `translate(${x}, ${y}) scale(1, ${ry / rx}) rotate(${rotation})`);
-    }
-    pizzaStats.mushrooms += count;
-  }
-
-  function drawRedPeppers(count) {
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = Math.sqrt(Math.random()) * (rx - 50);
-      
-      const x = cx + dist * Math.cos(angle);
-      const y = cy + (dist * ry / rx) * Math.sin(angle);
-      
-      const size = Math.random() * 20 + 30;
-      const rotation = Math.random() * 360;
-
-      svg.append("image")
-        .attr("href", "red_pepper_clipart.png")
-        .attr("x", -size / 2)
-        .attr("y", -size / 2)
-        .attr("width", size*3)
-        .attr("height", size*3)
-        .attr("transform", `translate(${x}, ${y}) scale(1, ${ry / rx}) rotate(${rotation})`);
-    }
-    pizzaStats.redPeppers += count;
-  }
-
-  function drawBroccoli(count) {
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = Math.sqrt(Math.random()) * (rx - 50);
-      
-      const x = cx + dist * Math.cos(angle);
-      const y = cy + (dist * ry / rx) * Math.sin(angle);
-      
-      const size = Math.random() * 20 + 30;
-      const rotation = Math.random() * 360;
-
-      svg.append("image")
-        .attr("href", "broccoli_clipart.png")
-        .attr("x", -size / 2)
-        .attr("y", -size / 2)
-        .attr("width", size*2)
-        .attr("height", size*2)
-        .attr("transform", `translate(${x}, ${y}) scale(1, ${ry / rx}) rotate(${rotation})`);
-    }
-    pizzaStats.broccoli += count;
-  }
+  let pizzaStats = getInitialPizzaStats();
 
   const nutritionData = {
     base:       { cal: 250, pro: 12, fat: 10, carb: 25 },
@@ -429,18 +387,9 @@
 
   function resetGame() {
     svg.selectAll("*").remove();
-    drawCheckerboard();
+    drawBackground();
     drawPizzaCrust();
-    pizzaStats = {
-      sauce: 0,
-      cheese: 0,
-      pepperoni: 0,
-      mushrooms: 0,
-      flakes: 0,
-      herbs: 0,
-      redPeppers: 0,
-      broccoli: 0
-    };
+    pizzaStats = getInitialPizzaStats();
     d3.select("#stats-screen").classed("d-none", true);
     d3.select("#container").classed("d-none", false);
     d3.select("#controls").classed("d-none", false);
@@ -465,23 +414,27 @@
   
   // ===== MAIN EXECUTION =====
 
-  drawCheckerboard();
+  drawBackground();
   drawPizzaCrust();
 
   // Button Event Listeners
   d3.select("#btn-sauce").on("click", throttle(() => drawSauce(), 500));
-  d3.select("#btn-cheese").on("click", throttle(() => addCheese(200), 500));
-  d3.select("#btn-pepperoni").on("click", throttle(() => drawPepperoni(10), 500));
-  d3.select("#btn-mushrooms").on("click", throttle(() => drawMushrooms(15), 500));
-  d3.select("#btn-flakes").on("click", throttle(() => drawRedPepperFlakes(10), 500));
-  d3.select("#btn-herbs").on("click", throttle(() => drawHerbs(10), 500));
-  d3.select("#btn-red-peppers").on("click", throttle(() => drawRedPeppers(15), 500));
-  d3.select("#btn-broccoli").on("click", throttle(() => drawBroccoli(15), 500));
+  d3.select("#btn-cheese").on("click", throttle(() => addCheese(toppingAmounts.cheese), 500));
+  d3.select("#btn-pepperoni").on("click", throttle(() => drawPepperoni(toppingAmounts.pepperoni), 500));
+  d3.select("#btn-flakes").on("click", throttle(() => {
+    const size = Math.random() * 4 + 2;
+    drawPolygonTopping(toppingAmounts.flakes, 'flakes', `0,${-size} ${size},${size/2} ${-size},${size/2}`, '#FF4500', 0.8);
+  }, 500));
+  d3.select("#btn-herbs").on("click", throttle(() => {
+    const size = Math.random() * 4 + 2;
+    drawPolygonTopping(toppingAmounts.herbs, 'herbs', `0,${-size} ${size/1.5},0 0,${size} ${-size/1.5},0`, '#3D7D00', 0.7);
+  }, 500));
+  d3.select("#btn-mushrooms").on("click", throttle(() => drawImageTopping(toppingAmounts.mushrooms, 'mushrooms', 'mushroom_clipart.png'), 500));
+  d3.select("#btn-red-peppers").on("click", throttle(() => drawImageTopping(toppingAmounts.redPeppers, 'redPeppers', 'red_pepper_clipart.png', { sizeMultiplier: 3, ellipseMargin: 50 }), 500));
+  d3.select("#btn-broccoli").on("click", throttle(() => drawImageTopping(toppingAmounts.broccoli, 'broccoli', 'broccoli_clipart.png', { sizeMultiplier: 2, ellipseMargin: 50 }), 500));
   d3.select("#btn-cook").on("click", cookPizza);
   d3.select("#btn-play-again").on("click", resetGame);
-  d3.select("#btn-clear").on("click", () => {
-    resetGame();
-  });
+  d3.select("#btn-clear").on("click", resetGame);
 </script>
 </body>
 </html>
