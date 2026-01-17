@@ -5,10 +5,129 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script type="module">
-  console.log(d3); // test if d3 is loaded
-  // Add an SVG
-  // Add Rectangles
-  // Add Circles
-  // Add Lines
-  // Add Polygons
+
+  const width = 800;
+  const height = 600;
+
+  //SVG Container
+  const svg = d3.select("#container")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  //Checkerboard Background
+  const squareSize = width / 20;
+  const cols = width / squareSize;
+  const rows = height / squareSize;
+
+  const data = [];
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      data.push({ row, col, x: col * squareSize, y: row * squareSize });
+    }
+  }
+
+  svg.selectAll("rect.checkerboard")
+    .data(data)
+    .enter()
+    .append("rect")
+    .attr("class", "checkerboard")
+    .attr("x", d => d.x)
+    .attr("y", d => d.y)
+    .attr("width", squareSize)
+    .attr("height", squareSize)
+    .attr("fill", d => (d.row + d.col) % 2 === 0 ? "white" : "red");
+
+
+  // Pizza base using ellipse
+  svg.append("ellipse")
+    .attr("cx", width / 2)
+    .attr("cy", 2 * height / 3)
+    .attr("rx", 300)
+    .attr("ry", 150)
+    .attr("fill", "#DEB887")
+    .attr("stroke", "#dba763")
+    .attr("stroke-width", 20);
+
+  // Red sauce using paths
+  const cx = width / 2;
+  const cy = 2 * height / 3;
+  const rx = 280;
+  const ry = 130;
+  const waves = 12;
+  const waveHeight = 7;
+  
+  let pathData = "M";
+  for (let i = 0; i <= 360; i += 1) {
+    const angle = (i * Math.PI) / 180;
+    const wave = waveHeight * Math.sin((i / 360) * waves * Math.PI * 2);
+    const x = cx + (rx + wave) * Math.cos(angle);
+    const y = cy + (ry + wave * 0.5) * Math.sin(angle);
+    pathData += `${i === 0 ? "" : "L"} ${x} ${y}`;
+  }
+  pathData += " Z";
+
+  svg.append("path")
+    .attr("d", pathData)
+    .attr("fill", "#ba1a1a");
+
+  // Cheese using many short random lines
+  const cheeseColors = ["#FFD700", "#FFA500", "#FFE4B5", "#FFDAB9", "#FFFACD"];
+  const numCheeseLinesTotal = 10000;
+  
+  for (let i = 0; i < numCheeseLinesTotal; i++) {
+    // Random starting point
+    const angle1 = Math.random() * Math.PI * 2;
+    const dist1 = Math.sqrt(Math.random()) * rx;
+    
+    const x1 = cx + dist1 * Math.cos(angle1);
+    const y1 = cy + (dist1 * ry / rx) * Math.sin(angle1);
+    
+    // Short line segment
+    const lineAngle = Math.random() * Math.PI * 2;
+    const lineLength = Math.random() * 20 + 5;
+    
+    const x2 = x1 + lineLength * Math.cos(lineAngle);
+    const y2 = y1 + lineLength * Math.sin(lineAngle);
+    
+    svg.append("line")
+      .attr("x1", x1) 
+      .attr("y1", y1)
+      .attr("x2", x2)
+      .attr("y2", y2)
+      .attr("stroke", cheeseColors[Math.floor(Math.random() * cheeseColors.length)])
+      .attr("stroke-width", Math.random() * 2 + 1)
+      .attr("opacity", Math.random() * 0.6 + 0.3);
+  }
+
+  // Add pepperoni
+  const pepperoniColors = ["#E63946", "#C1121F", "#D62828", "#D32F2F"];
+  const pepperoniData = [];
+  const rings = 12;
+  
+  for (let ring = 1; ring <= rings; ring++) {
+    const pepperoniPerRing = Math.floor(ring * 1.6);
+    for (let i = 0; i < pepperoniPerRing; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = (ring / rings) * rx;
+      
+      pepperoniData.push({
+        cx: cx + dist * Math.cos(angle),
+        cy: cy + (dist * ry / rx) * Math.sin(angle),
+        color: pepperoniColors[Math.floor(Math.random() * pepperoniColors.length)]
+      });
+    }
+  }
+
+  svg.selectAll("ellipse.pepperoni")
+    .data(pepperoniData)
+    .enter()
+    .append("ellipse")
+    .attr("class", "pepperoni")
+    .attr("cx", d => d.cx)
+    .attr("cy", d => d.cy)
+    .attr("rx", 20)
+    .attr("ry", 13)
+    .attr("fill", d => d.color);
+
 </script>
