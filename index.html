@@ -1,8 +1,77 @@
 <!DOCTYPE html>
-<h1>D3.js Visualization</h1>
-<h2>By Sarah Meyer</h2>
-<div id="container">
-</div>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pizza Visualization</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding: 20px; background-color: #f8f9fa; }
+    #container { margin: 20px auto; display: flex; justify-content: center; }
+    .icon-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        margin: 0 5px;
+        font-size: 1.8rem; /* For emojis */
+        transition: transform 0.1s ease-in-out;
+    }
+    .icon-btn:hover {
+        transform: scale(1.15);
+    }
+    .icon-btn img { height: 35px; }
+  </style>
+</head>
+<body class="text-center">
+  <div class="container">
+    <h1 class="display-4">D3.js Visualization</h1>
+    <h2 class="text-muted">By Sarah Meyer</h2>
+    <div id="container">
+    </div>
+    <div id="controls" class="mb-4">
+      <div class="row justify-content-center">
+        <div class="col-md-3">
+          <h5 class="mb-3">Base</h5>
+          <div class="d-flex justify-content-center align-items-center">
+            <button id="btn-sauce" class="icon-btn" title="Add Sauce">🥫</button>
+            <button id="btn-cheese" class="icon-btn" title="Add Cheese">🧀</button>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <h5 class="mb-3">Toppings</h5>
+          <div class="d-flex justify-content-center align-items-center">
+            <button id="btn-pepperoni" class="icon-btn" title="Add Pepperoni">🔴</button>
+            <button id="btn-mushrooms" class="icon-btn" title="Add Mushrooms"><img src="mushroom_clipart.png"></button>
+            <button id="btn-red-peppers" class="icon-btn" title="Add Red Peppers"><img src="red_pepper_clipart.png"></button>
+            <button id="btn-broccoli" class="icon-btn" title="Add Broccoli"><img src="broccoli_clipart.png"></button>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <h5 class="mb-3">Finish</h5>
+          <div class="d-flex justify-content-center align-items-center">
+            <button id="btn-flakes" class="icon-btn" title="Add Pepper Flakes">🌶️</button>
+            <button id="btn-herbs" class="icon-btn" title="Add Herbs">🌿</button>
+            <button id="btn-cook" class="icon-btn" title="Cook Pizza">🍳</button>
+            <button id="btn-clear" class="icon-btn" title="Clear Pizza">🗑️</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="stats-screen" class="d-none">
+      <h2 class="mb-4">Pizza Stats</h2>
+      <div class="row">
+        <div class="col-md-6">
+          <h4>Nutritional Value</h4>
+          <ul id="nutrition-list" class="list-group text-start"></ul>
+        </div>
+        <div class="col-md-6">
+          <h4>Topping Distribution</h4>
+          <div id="chart-container"></div>
+        </div>
+      </div>
+      <button id="btn-play-again" class="btn btn-primary btn-lg mt-4">Play Again</button>
+    </div>
+  </div>
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script type="module">
 
@@ -20,6 +89,17 @@
   const cy = 2 * height / 3;
   const rx = 280;
   const ry = 130;
+
+  let pizzaStats = {
+    sauce: 0,
+    cheese: 0,
+    pepperoni: 0,
+    mushrooms: 0,
+    flakes: 0,
+    herbs: 0,
+    redPeppers: 0,
+    broccoli: 0
+  };
 
   // ===== FUNCTION DEFINITIONS =====
 
@@ -75,6 +155,7 @@
     svg.append("path")
       .attr("d", pathData)
       .attr("fill", "#ba1a1a");
+    pizzaStats.sauce = 1;
   }
 
   function addCheese(numLines) {
@@ -102,37 +183,27 @@
         .attr("stroke-width", Math.random() * 2 + 1)
         .attr("opacity", Math.random() * 0.6 + 0.3);
     }
+    pizzaStats.cheese += numLines;
   }
 
-  function drawPepperoni() {
+  function drawPepperoni(count) {
     const pepperoniColors = ["#E63946", "#C1121F", "#D62828", "#D32F2F"];
-    const pepperoniData = [];
-    const rings = 12;
     
-    for (let ring = 1; ring <= rings; ring++) {
-      const pepperoniPerRing = Math.floor(ring * 1.6);
-      for (let i = 0; i < pepperoniPerRing; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const dist = (ring / rings) * rx;
-        
-        pepperoniData.push({
-          cx: cx + dist * Math.cos(angle),
-          cy: cy + (dist * ry / rx) * Math.sin(angle),
-          color: pepperoniColors[Math.floor(Math.random() * pepperoniColors.length)]
-        });
-      }
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.sqrt(Math.random()) * (rx - 25);
+      
+      const x = cx + dist * Math.cos(angle);
+      const y = cy + (dist * ry / rx) * Math.sin(angle);
+      
+      svg.append("ellipse")
+        .attr("cx", x)
+        .attr("cy", y)
+        .attr("rx", 20)
+        .attr("ry", 13)
+        .attr("fill", pepperoniColors[Math.floor(Math.random() * pepperoniColors.length)]);
     }
-
-    svg.selectAll("ellipse.pepperoni")
-      .data(pepperoniData)
-      .enter()
-      .append("ellipse")
-      .attr("class", "pepperoni")
-      .attr("cx", d => d.cx)
-      .attr("cy", d => d.cy)
-      .attr("rx", 20)
-      .attr("ry", 13)
-      .attr("fill", d => d.color);
+    pizzaStats.pepperoni += count;
   }
 
   function drawRedPepperFlakes(count) {
@@ -143,14 +214,19 @@
       const x = cx + dist * Math.cos(angle);
       const y = cy + (dist * ry / rx) * Math.sin(angle);
       
-      const flakeSize = Math.random() * 4 + 2;
+      const size = Math.random() * 4 + 2;
       const rotation = Math.random() * 360;
+      
+      // Define points relative to center (0,0)
+      const points = `0,${-size} ${size},${size/2} ${-size},${size/2}`;
+
       svg.append("polygon")
-        .attr("points", `${x},${y - flakeSize} ${x + flakeSize},${y + flakeSize/2} ${x - flakeSize},${y + flakeSize/2}`)
+        .attr("points", points)
         .attr("fill", "#FF4500")
-        .attr("transform", `rotate(${rotation} ${x} ${y})`)
+        .attr("transform", `translate(${x}, ${y}) rotate(${rotation})`)
         .attr("opacity", 0.8);
     }
+    pizzaStats.flakes += count;
   }
 
   function drawHerbs(count) {
@@ -161,18 +237,25 @@
       const x = cx + dist * Math.cos(angle);
       const y = cy + (dist * ry / rx) * Math.sin(angle);
       
-      const herbSize = Math.random() * 3 + 1.5;
+      const size = Math.random() * 4 + 2;
+      const rotation = Math.random() * 360;
+      
+      // Diamond shape (4 points) centered at (0,0)
+      const points = `0,${-size} ${size/1.5},0 0,${size} ${-size/1.5},0`;
+
       svg.append("polygon")
-        .attr("points", `${x},${y} ${x + herbSize},${y - herbSize} ${x + herbSize*1.5},${y} ${x + herbSize},${y + herbSize} ${x - herbSize},${y + herbSize}`)
+        .attr("points", points)
         .attr("fill", "#3D7D00")
+        .attr("transform", `translate(${x}, ${y}) rotate(${rotation})`)
         .attr("opacity", 0.7);
     }
+    pizzaStats.herbs += count;
   }
 
   function drawMushrooms(count) {
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const dist = Math.sqrt(Math.random()) * (rx - 10);
+      const dist = Math.sqrt(Math.random()) * (rx - 40);
       
       const x = cx + dist * Math.cos(angle);
       const y = cy + (dist * ry / rx) * Math.sin(angle);
@@ -188,6 +271,195 @@
         .attr("height", size)
         .attr("transform", `translate(${x}, ${y}) scale(1, ${ry / rx}) rotate(${rotation})`);
     }
+    pizzaStats.mushrooms += count;
+  }
+
+  function drawRedPeppers(count) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.sqrt(Math.random()) * (rx - 50);
+      
+      const x = cx + dist * Math.cos(angle);
+      const y = cy + (dist * ry / rx) * Math.sin(angle);
+      
+      const size = Math.random() * 20 + 30;
+      const rotation = Math.random() * 360;
+
+      svg.append("image")
+        .attr("href", "red_pepper_clipart.png")
+        .attr("x", -size / 2)
+        .attr("y", -size / 2)
+        .attr("width", size*3)
+        .attr("height", size*3)
+        .attr("transform", `translate(${x}, ${y}) scale(1, ${ry / rx}) rotate(${rotation})`);
+    }
+    pizzaStats.redPeppers += count;
+  }
+
+  function drawBroccoli(count) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.sqrt(Math.random()) * (rx - 50);
+      
+      const x = cx + dist * Math.cos(angle);
+      const y = cy + (dist * ry / rx) * Math.sin(angle);
+      
+      const size = Math.random() * 20 + 30;
+      const rotation = Math.random() * 360;
+
+      svg.append("image")
+        .attr("href", "broccoli_clipart.png")
+        .attr("x", -size / 2)
+        .attr("y", -size / 2)
+        .attr("width", size*2)
+        .attr("height", size*2)
+        .attr("transform", `translate(${x}, ${y}) scale(1, ${ry / rx}) rotate(${rotation})`);
+    }
+    pizzaStats.broccoli += count;
+  }
+
+  const nutritionData = {
+    base:       { cal: 250, pro: 12, fat: 10, carb: 25 },
+    sauce:      { cal: 50,  pro: 1,  fat: 0,  carb: 10 }, // per serving (1)
+    cheese:     { cal: 0.2, pro: 0.02, fat: 0.03, carb: 0.01 }, // per strand
+    pepperoni:  { cal: 15,  pro: 1,  fat: 1.3, carb: 0.1 }, // per slice
+    mushrooms:  { cal: 5,   pro: 0.5, fat: 0,  carb: 1 }, // per piece
+    redPeppers: { cal: 5,   pro: 0.2, fat: 0,  carb: 1.5 }, // per piece
+    broccoli:   { cal: 5,   pro: 0.4, fat: 0,  carb: 1 }, // per piece
+    flakes:     { cal: 0.5, pro: 0,  fat: 0,  carb: 0.1 }, // per dash
+    herbs:      { cal: 0.5, pro: 0,  fat: 0,  carb: 0.1 }  // per dash
+  };
+
+  function cookPizza() {
+    // Hide game
+    d3.select("#container").classed("d-none", true);
+    d3.select("#controls").classed("d-none", true);
+    d3.select("#stats-screen").classed("d-none", false);
+
+    // Calculate Nutrition from pizzaStats
+    let totalCal = nutritionData.base.cal;
+    let totalPro = nutritionData.base.pro;
+    let totalFat = nutritionData.base.fat;
+    let totalCarb = nutritionData.base.carb;
+
+    for (const topping in pizzaStats) {
+        if (pizzaStats[topping] > 0 && nutritionData[topping]) {
+            totalCal += pizzaStats[topping] * nutritionData[topping].cal;
+            totalPro += pizzaStats[topping] * nutritionData[topping].pro;
+            totalFat += pizzaStats[topping] * nutritionData[topping].fat;
+            totalCarb += pizzaStats[topping] * nutritionData[topping].carb;
+        }
+    }
+    
+    const nutritionHTML = `
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        Calories
+        <span class="badge bg-primary rounded-pill">${Math.round(totalCal)}</span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        Protein
+        <span class="badge bg-primary rounded-pill">${Math.round(totalPro)}g</span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        Fat
+        <span class="badge bg-primary rounded-pill">${Math.round(totalFat)}g</span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        Carbohydrates
+        <span class="badge bg-primary rounded-pill">${Math.round(totalCarb)}g</span>
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        Topping Count
+        <span class="badge bg-secondary rounded-pill">${pizzaStats.pepperoni + pizzaStats.mushrooms + pizzaStats.redPeppers + pizzaStats.broccoli}</span>
+      </li>
+    `;
+    d3.select("#nutrition-list").html(nutritionHTML);
+
+    // Draw Chart
+    const chartData = [
+      { name: "Pepperoni", value: pizzaStats.pepperoni },
+      { name: "Mushrooms", value: pizzaStats.mushrooms },
+      { name: "Red Peppers", value: pizzaStats.redPeppers },
+      { name: "Broccoli", value: pizzaStats.broccoli }
+    ].filter(d => d.value > 0);
+
+    const chartWidth = 400;
+    const chartHeight = 300;
+    const margin = {top: 20, right: 20, bottom: 40, left: 40};
+
+    d3.select("#chart-container").selectAll("*").remove();
+    
+    if (chartData.length === 0) {
+        d3.select("#chart-container").append("p").text("No toppings added!");
+        return;
+    }
+
+    const svgChart = d3.select("#chart-container")
+      .append("svg")
+      .attr("width", chartWidth)
+      .attr("height", chartHeight);
+
+    const x = d3.scaleBand()
+      .range([margin.left, chartWidth - margin.right])
+      .padding(0.1)
+      .domain(chartData.map(d => d.name));
+
+    const y = d3.scaleLinear()
+      .range([chartHeight - margin.bottom, margin.top])
+      .domain([0, d3.max(chartData, d => d.value)]);
+
+    svgChart.append("g")
+      .attr("transform", `translate(0,${chartHeight - margin.bottom})`)
+      .call(d3.axisBottom(x));
+
+    svgChart.append("g")
+      .attr("transform", `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y));
+
+    svgChart.selectAll(".bar")
+      .data(chartData)
+      .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", d => x(d.name))
+      .attr("y", d => y(d.value))
+      .attr("width", x.bandwidth())
+      .attr("height", d => y(0) - y(d.value))
+      .attr("fill", "steelblue");
+  }
+
+  function resetGame() {
+    svg.selectAll("*").remove();
+    drawCheckerboard();
+    drawPizzaCrust();
+    pizzaStats = {
+      sauce: 0,
+      cheese: 0,
+      pepperoni: 0,
+      mushrooms: 0,
+      flakes: 0,
+      herbs: 0,
+      redPeppers: 0,
+      broccoli: 0
+    };
+    d3.select("#stats-screen").classed("d-none", true);
+    d3.select("#container").classed("d-none", false);
+    d3.select("#controls").classed("d-none", false);
+  }
+
+  function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+      const btn = d3.select(this);
+      if (!inThrottle) {
+        func.apply(this, arguments);
+        inThrottle = true;
+        btn.attr("disabled", true);
+        setTimeout(() => {
+          inThrottle = false;
+          btn.attr("disabled", null);
+        }, limit);
+      }
+    }
   }
   
   
@@ -195,11 +467,21 @@
 
   drawCheckerboard();
   drawPizzaCrust();
-  drawSauce();
-  addCheese(5000);
-  drawPepperoni();
-  drawMushrooms(20);
-  addCheese(1000);
-  drawRedPepperFlakes(50);
-  drawHerbs(40);
+
+  // Button Event Listeners
+  d3.select("#btn-sauce").on("click", throttle(() => drawSauce(), 500));
+  d3.select("#btn-cheese").on("click", throttle(() => addCheese(200), 500));
+  d3.select("#btn-pepperoni").on("click", throttle(() => drawPepperoni(10), 500));
+  d3.select("#btn-mushrooms").on("click", throttle(() => drawMushrooms(15), 500));
+  d3.select("#btn-flakes").on("click", throttle(() => drawRedPepperFlakes(10), 500));
+  d3.select("#btn-herbs").on("click", throttle(() => drawHerbs(10), 500));
+  d3.select("#btn-red-peppers").on("click", throttle(() => drawRedPeppers(15), 500));
+  d3.select("#btn-broccoli").on("click", throttle(() => drawBroccoli(15), 500));
+  d3.select("#btn-cook").on("click", cookPizza);
+  d3.select("#btn-play-again").on("click", resetGame);
+  d3.select("#btn-clear").on("click", () => {
+    resetGame();
+  });
 </script>
+</body>
+</html>
