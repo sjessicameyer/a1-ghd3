@@ -15,119 +15,191 @@
     .attr("width", width)
     .attr("height", height);
 
-  //Checkerboard Background
-  const squareSize = width / 20;
-  const cols = width / squareSize;
-  const rows = height / squareSize;
-
-  const data = [];
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      data.push({ row, col, x: col * squareSize, y: row * squareSize });
-    }
-  }
-
-  svg.selectAll("rect.checkerboard")
-    .data(data)
-    .enter()
-    .append("rect")
-    .attr("class", "checkerboard")
-    .attr("x", d => d.x)
-    .attr("y", d => d.y)
-    .attr("width", squareSize)
-    .attr("height", squareSize)
-    .attr("fill", d => (d.row + d.col) % 2 === 0 ? "white" : "red");
-
-
-  // Pizza base using ellipse
-  svg.append("ellipse")
-    .attr("cx", width / 2)
-    .attr("cy", 2 * height / 3)
-    .attr("rx", 300)
-    .attr("ry", 150)
-    .attr("fill", "#DEB887")
-    .attr("stroke", "#dba763")
-    .attr("stroke-width", 20);
-
-  // Red sauce using paths
+  // Pizza dimensions
   const cx = width / 2;
   const cy = 2 * height / 3;
   const rx = 280;
   const ry = 130;
-  const waves = 12;
-  const waveHeight = 7;
-  
-  let pathData = "M";
-  for (let i = 0; i <= 360; i += 1) {
-    const angle = (i * Math.PI) / 180;
-    const wave = waveHeight * Math.sin((i / 360) * waves * Math.PI * 2);
-    const x = cx + (rx + wave) * Math.cos(angle);
-    const y = cy + (ry + wave * 0.5) * Math.sin(angle);
-    pathData += `${i === 0 ? "" : "L"} ${x} ${y}`;
-  }
-  pathData += " Z";
 
-  svg.append("path")
-    .attr("d", pathData)
-    .attr("fill", "#ba1a1a");
+  // ===== FUNCTION DEFINITIONS =====
 
-  // Cheese using many short random lines
-  const cheeseColors = ["#FFD700", "#FFA500", "#FFE4B5", "#FFDAB9", "#FFFACD"];
-  const numCheeseLinesTotal = 10000;
-  
-  for (let i = 0; i < numCheeseLinesTotal; i++) {
-    // Random starting point
-    const angle1 = Math.random() * Math.PI * 2;
-    const dist1 = Math.sqrt(Math.random()) * rx;
-    
-    const x1 = cx + dist1 * Math.cos(angle1);
-    const y1 = cy + (dist1 * ry / rx) * Math.sin(angle1);
-    
-    // Short line segment
-    const lineAngle = Math.random() * Math.PI * 2;
-    const lineLength = Math.random() * 20 + 5;
-    
-    const x2 = x1 + lineLength * Math.cos(lineAngle);
-    const y2 = y1 + lineLength * Math.sin(lineAngle);
-    
-    svg.append("line")
-      .attr("x1", x1) 
-      .attr("y1", y1)
-      .attr("x2", x2)
-      .attr("y2", y2)
-      .attr("stroke", cheeseColors[Math.floor(Math.random() * cheeseColors.length)])
-      .attr("stroke-width", Math.random() * 2 + 1)
-      .attr("opacity", Math.random() * 0.6 + 0.3);
+  function drawCheckerboard() {
+    const squareSize = width / 20;
+    const cols = width / squareSize;
+    const rows = height / squareSize;
+
+    const data = [];
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        data.push({ row, col, x: col * squareSize, y: row * squareSize });
+      }
+    }
+
+    svg.selectAll("rect.checkerboard")
+      .data(data)
+      .enter()
+      .append("rect")
+      .attr("class", "checkerboard")
+      .attr("x", d => d.x)
+      .attr("y", d => d.y)
+      .attr("width", squareSize)
+      .attr("height", squareSize)
+      .attr("fill", d => (d.row + d.col) % 2 === 0 ? "white" : "red");
   }
 
-  // Add pepperoni
-  const pepperoniColors = ["#E63946", "#C1121F", "#D62828", "#D32F2F"];
-  const pepperoniData = [];
-  const rings = 12;
-  
-  for (let ring = 1; ring <= rings; ring++) {
-    const pepperoniPerRing = Math.floor(ring * 1.6);
-    for (let i = 0; i < pepperoniPerRing; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = (ring / rings) * rx;
+  function drawPizzaCrust() {
+    svg.append("ellipse")
+      .attr("cx", cx)
+      .attr("cy", cy)
+      .attr("rx", 300)
+      .attr("ry", 150)
+      .attr("fill", "#DEB887")
+      .attr("stroke", "#dba763")
+      .attr("stroke-width", 20);
+  }
+
+  function drawSauce() {
+    const waves = 12;
+    const waveHeight = 7;
+    
+    let pathData = "M";
+    for (let i = 0; i <= 360; i += 1) {
+      const angle = (i * Math.PI) / 180;
+      const wave = waveHeight * Math.sin((i / 360) * waves * Math.PI * 2);
+      const x = cx + (rx + wave) * Math.cos(angle);
+      const y = cy + (ry + wave * 0.5) * Math.sin(angle);
+      pathData += `${i === 0 ? "" : "L"} ${x} ${y}`;
+    }
+    pathData += " Z";
+
+    svg.append("path")
+      .attr("d", pathData)
+      .attr("fill", "#ba1a1a");
+  }
+
+  function addCheese(numLines) {
+    const cheeseColors = ["#FFD700", "#FFA500", "#FFE4B5", "#FFDAB9", "#FFFACD"];
+    
+    for (let i = 0; i < numLines; i++) {
+      const angle1 = Math.random() * Math.PI * 2;
+      const dist1 = Math.sqrt(Math.random()) * rx;
       
-      pepperoniData.push({
-        cx: cx + dist * Math.cos(angle),
-        cy: cy + (dist * ry / rx) * Math.sin(angle),
-        color: pepperoniColors[Math.floor(Math.random() * pepperoniColors.length)]
-      });
+      const x1 = cx + dist1 * Math.cos(angle1);
+      const y1 = cy + (dist1 * ry / rx) * Math.sin(angle1);
+      
+      const lineAngle = Math.random() * Math.PI * 2;
+      const lineLength = Math.random() * 20 + 5;
+      
+      const x2 = x1 + lineLength * Math.cos(lineAngle);
+      const y2 = y1 + lineLength * Math.sin(lineAngle);
+      
+      svg.append("line")
+        .attr("x1", x1) 
+        .attr("y1", y1)
+        .attr("x2", x2)
+        .attr("y2", y2)
+        .attr("stroke", cheeseColors[Math.floor(Math.random() * cheeseColors.length)])
+        .attr("stroke-width", Math.random() * 2 + 1)
+        .attr("opacity", Math.random() * 0.6 + 0.3);
     }
   }
 
-  svg.selectAll("ellipse.pepperoni")
-    .data(pepperoniData)
-    .enter()
-    .append("ellipse")
-    .attr("class", "pepperoni")
-    .attr("cx", d => d.cx)
-    .attr("cy", d => d.cy)
-    .attr("rx", 20)
-    .attr("ry", 13)
-    .attr("fill", d => d.color);
+  function drawPepperoni() {
+    const pepperoniColors = ["#E63946", "#C1121F", "#D62828", "#D32F2F"];
+    const pepperoniData = [];
+    const rings = 12;
+    
+    for (let ring = 1; ring <= rings; ring++) {
+      const pepperoniPerRing = Math.floor(ring * 1.6);
+      for (let i = 0; i < pepperoniPerRing; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = (ring / rings) * rx;
+        
+        pepperoniData.push({
+          cx: cx + dist * Math.cos(angle),
+          cy: cy + (dist * ry / rx) * Math.sin(angle),
+          color: pepperoniColors[Math.floor(Math.random() * pepperoniColors.length)]
+        });
+      }
+    }
 
+    svg.selectAll("ellipse.pepperoni")
+      .data(pepperoniData)
+      .enter()
+      .append("ellipse")
+      .attr("class", "pepperoni")
+      .attr("cx", d => d.cx)
+      .attr("cy", d => d.cy)
+      .attr("rx", 20)
+      .attr("ry", 13)
+      .attr("fill", d => d.color);
+  }
+
+  function drawRedPepperFlakes(count) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.sqrt(Math.random()) * (rx - 20);
+      
+      const x = cx + dist * Math.cos(angle);
+      const y = cy + (dist * ry / rx) * Math.sin(angle);
+      
+      const flakeSize = Math.random() * 4 + 2;
+      const rotation = Math.random() * 360;
+      svg.append("polygon")
+        .attr("points", `${x},${y - flakeSize} ${x + flakeSize},${y + flakeSize/2} ${x - flakeSize},${y + flakeSize/2}`)
+        .attr("fill", "#FF4500")
+        .attr("transform", `rotate(${rotation} ${x} ${y})`)
+        .attr("opacity", 0.8);
+    }
+  }
+
+  function drawHerbs(count) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.sqrt(Math.random()) * (rx - 20);
+      
+      const x = cx + dist * Math.cos(angle);
+      const y = cy + (dist * ry / rx) * Math.sin(angle);
+      
+      const herbSize = Math.random() * 3 + 1.5;
+      svg.append("polygon")
+        .attr("points", `${x},${y} ${x + herbSize},${y - herbSize} ${x + herbSize*1.5},${y} ${x + herbSize},${y + herbSize} ${x - herbSize},${y + herbSize}`)
+        .attr("fill", "#3D7D00")
+        .attr("opacity", 0.7);
+    }
+  }
+
+  function drawMushrooms(count) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.sqrt(Math.random()) * (rx - 10);
+      
+      const x = cx + dist * Math.cos(angle);
+      const y = cy + (dist * ry / rx) * Math.sin(angle);
+      
+      const size = Math.random() * 20 + 30;
+      const rotation = Math.random() * 360;
+
+      svg.append("image")
+        .attr("href", "mushroom_clipart.png")
+        .attr("x", -size / 2)
+        .attr("y", -size / 2)
+        .attr("width", size)
+        .attr("height", size)
+        .attr("transform", `translate(${x}, ${y}) scale(1, ${ry / rx}) rotate(${rotation})`);
+    }
+  }
+  
+  
+  // ===== MAIN EXECUTION =====
+
+  drawCheckerboard();
+  drawPizzaCrust();
+  drawSauce();
+  addCheese(5000);
+  drawPepperoni();
+  drawMushrooms(20);
+  addCheese(1000);
+  drawRedPepperFlakes(50);
+  drawHerbs(40);
 </script>
