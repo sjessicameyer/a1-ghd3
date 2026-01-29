@@ -4,7 +4,7 @@ This project is an interactive pizza maker built with D3.js. Users can create th
 
 ## Live Demo
 
-You can try it out here: [https://sarahmeyer.github.io/a1-ghd3/](https://sarahmeyer.github.io/a1-ghd3/)
+You can try it out here: [https://sjessicameyer.github.io/a1-ghd3/](https://sjessicameyer.github.io/a1-ghd3/)
 
 ## Screenshots
 
